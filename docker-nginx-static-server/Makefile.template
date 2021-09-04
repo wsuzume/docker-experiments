@@ -1,0 +1,67 @@
+SOURCE=Dockerfile
+IMAGE=wsuzume/docker-nginx-static-server:latest
+
+
+# build container image
+.PHONY: image
+image: Dockerfile
+	docker image build -f ${SOURCE} -t ${IMAGE} .
+
+.PHONY: pull
+pull:
+	docker pull ${IMAGE}
+
+.PHONY: push
+push:
+	docker push ${IMAGE}
+
+# clean up all stopped containers
+.PHONY: clean
+clean:
+	docker container prune
+
+# delete all image
+.PHONY: doomsday
+doomsday:
+	docker image rm -f `docker image ls -q`
+
+# create new container and login to the shell
+.PHONY: shell
+shell:
+	docker container run -it --rm \
+		-p 80:80 \
+		-v ${PWD}/letsencrypt:/etc/letsencrypt \
+		-v ${PWD}/conf.d:/etc/nginx/conf.d \
+		${IMAGE} \
+		bash
+
+# edit here
+DOMAINS=-d example.com -d www.example.com
+EMAIL=me@mail.com
+
+# get certificate
+.PHONY: cert
+cert:
+	docker container run -it --rm \
+		-p 80:80 \
+		-v ${PWD}/letsencrypt:/etc/letsencrypt \
+		-v ${PWD}/conf.d:/etc/nginx/conf.d \
+		${IMAGE} \
+		certbot certonly --standalone ${DOMAINS} -m ${EMAIL} --agree-tos -n
+
+.PHONY: renew_cert
+renew_cert:
+	docker container exec services_static-server_1 \
+		certbot certonly --webroot -w /var/acme-challenge ${DOMAINS} -m ${EMAIL} --agree-tos --force-renewal -n
+
+.PHONY: run
+run:
+	docker-compose -p services \
+		-f docker-compose.yml \
+		up
+
+.PHONY: test_run
+test_run:
+	docker-compose -p services \
+		-f docker-compose-test.yml \
+		up

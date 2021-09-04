@@ -1,0 +1,16 @@
+version: "3"
+services:
+  static-server:
+    image: wsuzume/docker-nginx-static-server:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./conf-test.d:/etc/nginx/conf.d
+      - ./static:/var/static
+      - ./letsencrypt:/etc/letsencrypt
+    command: >-
+      bash -c "nginx -g 'daemon off;'"

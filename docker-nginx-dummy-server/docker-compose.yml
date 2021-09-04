@@ -1,0 +1,23 @@
+version: "3.7"
+services:
+  dummy-server:
+    image: wsuzume/docker-nginx-dummy-server:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dummy-server
+    networks:
+      - proxy-link
+    volumes:
+      - ./conf.d:/etc/nginx/conf.d
+      - ./static:/var/static
+    command: >-
+      bash -c "nginx -g 'daemon off;'"
+
+networks:
+  default:
+    external:
+      name: bridge
+  proxy-link:
+    name: proxylink
+    driver: bridge

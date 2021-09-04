@@ -1,0 +1,26 @@
+version: "3.7"
+services:
+  reverse-proxy:
+    image: wsuzume/docker-nginx-reverse-proxy:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reverse-proxy
+    ports:
+      - '80:80'
+      - '443:443'
+    networks:
+      - proxy-link
+    volumes:
+      - ./conf.d:/etc/nginx/conf.d
+      - ./letsencrypt:/etc/letsencrypt
+    command: >-
+      bash -c "nginx -g 'daemon off;'"
+
+networks:
+  default:
+    external:
+      name: bridge
+  proxy-link:
+    name: proxylink
+    driver: bridge
